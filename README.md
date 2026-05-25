@@ -68,16 +68,32 @@ npm run preview   # preview the production build locally
 npm run lint      # eslint (fails on warnings and console.log)
 ```
 
-### Why the dev proxy?
+### Why the proxy?
 
-Internshala's endpoint doesn't send CORS headers, so the browser can't call it
-directly. The Vite dev server proxies it instead — the client fetches
-`/api/hiring/search` and Vite forwards that to `https://internshala.com/hiring/search`
-(see `vite.config.js`). `followRedirects` is enabled so the occasional upstream
-302 is resolved server-side and never reaches the browser.
+Internshala's endpoints send no CORS headers, so the browser can't call them
+directly. The client always fetches a relative `/api/*` path, which is proxied
+to Internshala in two places:
 
-For a production deployment you'd point the proxy/rewrite at your own backend or
-a serverless function that forwards the request (see below).
+- **Local dev** — the Vite dev-server proxy (`vite.config.js`). `followRedirects`
+  is on so the occasional upstream 302 is resolved server-side.
+- **Production (Vercel)** — the serverless function `api/[...path].js`, which
+  forwards `/api/*` to Internshala and follows redirects the same way.
+
+Both read the upstream origin from `INTERNSHALA_BASE_URL`, and the client base
+path from `VITE_API_BASE_URL` (see **Environment variables** below).
+
+### Environment variables
+
+Copy `.env.example` to `.env` for local dev, and set the same values in your
+Vercel project's **Settings → Environment Variables**:
+
+| Variable | Default | Used by |
+| -------- | ------- | ------- |
+| `VITE_API_BASE_URL` | `/api` | client (build-time) — base path for requests |
+| `INTERNSHALA_BASE_URL` | `https://internshala.com` | dev proxy + serverless function (server-side) |
+
+Both have sensible defaults, so the app works without setting anything — the
+variables are there for configurability.
 
 ## Project structure
 
@@ -123,22 +139,20 @@ src/
 
 ## Deploying
 
-This is a static site, so any static host works. Because of the CORS proxy,
-you need an equivalent rewrite in production.
+**Vercel (recommended)** — zero extra config:
 
-**Vercel** — add `vercel.json`:
+1. Import the repo (framework preset: **Vite**).
+2. The serverless function `api/[...path].js` automatically proxies `/api/*`
+   to Internshala, so the production build loads data without CORS issues.
+3. (Optional) Add the env vars from `.env.example` under
+   **Settings → Environment Variables**.
+4. Deploy.
 
-```json
-{
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "https://internshala.com/:path*" }
-  ]
-}
-```
-
-**Netlify** — add to `netlify.toml`:
+**Other static hosts** — the client needs an equivalent `/api/*` → Internshala
+proxy. On Netlify, for example:
 
 ```toml
+# netlify.toml
 [[redirects]]
   from = "/api/*"
   to = "https://internshala.com/:splat"
@@ -146,11 +160,10 @@ you need an equivalent rewrite in production.
   force = true
 ```
 
-Then:
+Local production preview:
 
 ```bash
-npm run build      # outputs to dist/
-# deploy the dist/ folder (or connect the repo to Vercel/Netlify)
+npm run build && npm run preview
 ```
 
 ## Notes & limitations

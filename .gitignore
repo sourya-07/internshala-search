@@ -3,6 +3,11 @@ dist
 dist-ssr
 *.local
 
+# Local env (commit .env.example instead)
+.env
+.env.*
+!.env.example
+
 # Editor / OS
 .vscode/*
 !.vscode/extensions.json
@@ -17,3 +22,4 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 make_commits.sh
+push_commits.sh

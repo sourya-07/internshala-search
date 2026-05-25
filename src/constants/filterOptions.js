@@ -1,10 +1,14 @@
 // Central place for the values that drive filtering, fetching and pagination.
 // Keeping them here avoids magic numbers/strings scattered across components.
 
+// Base path for API requests. Proxied to Internshala by the Vite dev server
+// (vite.config.js) locally and by the serverless function (/api) on Vercel.
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+
 // Public listing page — richer cards (skills, stipend ranges, ~50 results).
-export const LISTING_ENDPOINT = '/api/internships';
+export const LISTING_ENDPOINT = `${API_BASE}/internships`;
 // Leaner JSON feed, used as a resilient fallback if the listing can't be parsed.
-export const API_ENDPOINT = '/api/hiring/search';
+export const API_ENDPOINT = `${API_BASE}/hiring/search`;
 
 // Internshala stores logos by filename; the client builds the full URL from this.
 export const LOGO_BASE_URL = 'https://internshala-uploads.internshala.com/logo/';

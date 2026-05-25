@@ -53,7 +53,7 @@ function Navbar(props) {
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-[#e8e8e8] bg-white transition-colors duration-300 dark:border-slate-700 dark:bg-slate-900">
+    <header className="border-b border-[#e8e8e8] bg-white transition-colors duration-300 dark:border-slate-700 dark:bg-slate-900">
       <nav className="mx-auto flex h-[72px] max-w-[1224px] items-center justify-between px-4">
         <a
           href="#"

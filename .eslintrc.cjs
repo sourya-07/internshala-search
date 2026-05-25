@@ -15,6 +15,13 @@ module.exports = {
     // misfires on small in-file helper components, so we keep it off.
     'react/prop-types': 'off',
   },
+  overrides: [
+    {
+      // Node-side files: Vite build config + Vercel serverless functions.
+      files: ['vite.config.js', 'api/**/*.js'],
+      env: { node: true },
+    },
+  ],
 };
 
 // ESLint: no-unused-vars enforced, react/prop-types added (2026-05-25)

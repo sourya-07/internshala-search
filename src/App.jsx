@@ -124,9 +124,11 @@ function App() {
       />
 
       {/* internships_list_container: 48px top / 16px side padding; content capped at 1224px */}
-      <main className="px-4 pb-10 pt-12">
+      <main className="px-4 pt-12">
         <div className="mx-auto max-w-[1224px]">
-          {/* Heading is centred over the results column (offset past the filter sidebar) */}
+          {/* #reference: 956px block centred in the 1224px container (134px each side), 40px bottom */}
+          <div className="mx-auto max-w-[956px] pb-10">
+          {/* Heading centred over the 616px results column */}
           <div className="lg:flex lg:gap-6">
             <div className="hidden w-[316px] shrink-0 lg:block" aria-hidden="true" />
             <header className="flex-1 text-center">
@@ -139,8 +141,9 @@ function App() {
             </header>
           </div>
 
-          <div className="lg:flex lg:items-start lg:gap-6">
-            <aside className="hidden w-[316px] shrink-0 lg:block">
+          <div className="mt-2 lg:flex lg:items-start lg:gap-6">
+            {/* Sticks to the top of the viewport while the results scroll past */}
+            <aside className="hidden w-[316px] shrink-0 self-start lg:sticky lg:top-4 lg:block">
               <FilterPanel {...filterProps} />
             </aside>
 
@@ -174,6 +177,7 @@ function App() {
               showPromoted={!showSavedOnly}
             />
           </div>
+        </div>
         </div>
         </div>
       </main>
