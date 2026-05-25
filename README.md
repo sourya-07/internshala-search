@@ -8,12 +8,6 @@ page has loaded. Bookmarks and dark mode are persisted across refreshes.
 > Built with Vite + React and Tailwind CSS. No UI component libraries — every
 > component is hand-rolled.
 
-## Screenshots
-
-![Internshala Search](docs/light.png)
-
-<!-- Tip: add a dark-mode capture (docs/dark.png) and a 375px mobile shot too. -->
-
 ## Features
 
 - **Live data** fetched once on mount, then cached in state — every interaction
@@ -38,6 +32,29 @@ page has loaded. Bookmarks and dark mode are persisted across refreshes.
   state with a retry, and a friendly empty state when filters match nothing.
 - **Responsive** from 375px up: single-column cards and a filter bottom sheet on
   mobile, a two-column grid on tablet, and a fixed filter sidebar on desktop.
+
+## Beyond the original — extra features
+
+These go beyond a 1:1 clone of internshala.com:
+
+- **🌙 Dark mode** — a floating toggle (bottom-right) switches the entire UI to a
+  dark theme and remembers your choice in `localStorage`. The real site is
+  light-only.
+- **🔖 Bookmarks without an account** — save any internship with the bookmark
+  icon; saved items persist in `localStorage` and the navbar **"Saved"** toggle
+  filters the list to just those. On the real site, saving requires a logged-in
+  account.
+- **⚡ Fully client-side filtering, search & sort** — data is fetched **once**,
+  then every filter, keyword search (300ms debounced) and sort runs in-memory
+  with **zero extra API calls** — instant, no page reloads. The real site
+  round-trips to the server for each change.
+- **🛟 Resilient data layer with offline snapshot** — if the live source is
+  unreachable or blocked (e.g. Internshala blocks datacenter IPs in production),
+  the app transparently falls back to a bundled snapshot of **real** data instead
+  of showing a broken page. Source priority: live listing → live JSON feed →
+  snapshot.
+- **💀 Skeleton loaders & explicit states** — dedicated skeleton, error-with-retry
+  and empty states, so the UI never just blanks out.
 
 ## Tech stack
 
@@ -170,6 +187,12 @@ npm run build && npm run preview
 
 - Data is the first page Internshala currently serves (~50 listings) — no mock
   data is used anywhere.
+- **Production data:** Internshala blocks server-side requests from datacenter
+  IPs (e.g. Vercel), so the live proxy works locally but is challenged in
+  production. To keep the deployed site functional, `useInternships` falls back
+  to a **bundled snapshot of real data** (`src/data/internships.fallback.json`,
+  captured from the live listing) whenever the live endpoints are unreachable.
+  Refresh the snapshot anytime by re-running the listing fetch.
 - The reference UI also shows a one-line **internship description**. That text
   only appears on Internshala's logged-in, personalised page, so it isn't
   available from the public listing — those descriptions are intentionally

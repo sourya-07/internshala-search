@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { API_ENDPOINT, LISTING_ENDPOINT, LOGO_BASE_URL } from '../constants/filterOptions';
 import { parseInternshipsFromHtml } from '../utils/parseInternships';
+import fallbackInternships from '../data/internships.fallback.json';
 
 const MIN_PARSED_RESULTS = 3;
 
@@ -52,8 +53,12 @@ async function fetchFromJsonFeed(signal) {
 }
 
 // Fetches the internship list once on mount. All filtering happens downstream on
-// this in-memory list, so there are no further network calls. We prefer the
-// richer listing page and gracefully fall back to the JSON feed.
+// this in-memory list, so there are no further network calls. Source priority:
+//   1. live listing page (richest — skills, stipend ranges)
+//   2. live /hiring/search JSON feed
+//   3. bundled real-data snapshot — used when the live endpoints are unreachable
+//      or blocked (Internshala blocks datacenter IPs, e.g. on Vercel), so the
+//      deployed app always shows real data.
 export function useInternships() {
   const [internships, setInternships] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,35 +68,37 @@ export function useInternships() {
     const controller = new AbortController();
 
     async function loadInternships() {
+      let results = [];
+
       try {
-        let results = [];
-        try {
-          const response = await fetch(LISTING_ENDPOINT, { signal: controller.signal });
-          if (response.ok) {
-            results = parseInternshipsFromHtml(await response.text());
-          }
-        } catch (listingError) {
-          if (listingError.name === 'AbortError') {
-            throw listingError;
-          }
-          // swallow and fall through to the JSON feed
-        }
-
-        if (results.length < MIN_PARSED_RESULTS) {
-          results = await fetchFromJsonFeed(controller.signal);
-        }
-
-        if (!controller.signal.aborted) {
-          setInternships(results);
+        const response = await fetch(LISTING_ENDPOINT, { signal: controller.signal });
+        if (response.ok) {
+          results = parseInternshipsFromHtml(await response.text());
         }
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          setError(err.message || 'Unable to load internships right now.');
+        if (err.name === 'AbortError') return;
+      }
+
+      if (results.length < MIN_PARSED_RESULTS) {
+        try {
+          results = await fetchFromJsonFeed(controller.signal);
+        } catch (err) {
+          if (err.name === 'AbortError') return;
         }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
+      }
+
+      // Live endpoints blocked/unreachable → serve the cached real snapshot.
+      if (results.length === 0) {
+        results = fallbackInternships;
+      }
+
+      if (!controller.signal.aborted) {
+        if (results.length === 0) {
+          setError('Unable to load internships right now.');
+        } else {
+          setInternships(results);
         }
+        setIsLoading(false);
       }
     }
 
